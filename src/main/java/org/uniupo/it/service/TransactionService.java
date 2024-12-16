@@ -28,7 +28,7 @@ public class TransactionService {
         this.state = State.IDLE;
         this.selectedBeverage = "beverageCode";
 
-        Selection s = new Selection("1", 1);
+        Selection s = new Selection("4", 1);
         String dispenserTopic = String.format(Topics.DISPENSER_TOPIC, machineId);
         System.out.println(dispenserTopic);
         String jsonMessage = gson.toJson(s);
