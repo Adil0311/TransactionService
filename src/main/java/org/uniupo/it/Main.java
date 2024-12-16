@@ -27,11 +27,10 @@ public class Main {
             MqttClient mqttClient = new MqttClient(mqttUrl, UUID.randomUUID() + " " + machineId);
             MqttConnectOptions mqttOptions = new MqttOptions().getOptions();
             mqttClient.connect(mqttOptions);
-           TransactionService transactionService = new TransactionService(machineId, mqttClient);
+            TransactionService transactionService = new TransactionService(machineId, mqttClient);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-
     }
-    }
+}
