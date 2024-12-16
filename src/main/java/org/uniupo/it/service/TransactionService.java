@@ -28,7 +28,7 @@ public class TransactionService {
         this.state = State.IDLE;
         this.selectedBeverage = "beverageCode";
 
-        Selection s = new Selection("4", 1);
+        Selection s = new Selection("2", 5);
         String dispenserTopic = String.format(Topics.DISPENSER_TOPIC, machineId);
         System.out.println(dispenserTopic);
         String jsonMessage = gson.toJson(s);
@@ -38,6 +38,7 @@ public class TransactionService {
     private void consumableAvailabilityResponseHandler(String s, MqttMessage mqttMessage) {
         String jsonMessage = new String(mqttMessage.getPayload());
         DrinkAvailabilityResult consumableAvailability = gson.fromJson(jsonMessage, DrinkAvailabilityResult.class);
+        System.out.println(consumableAvailability.toString());
         if (consumableAvailability.isAvailable()) {
             System.out.println("Drink available");
         } else {

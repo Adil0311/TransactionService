@@ -26,4 +26,12 @@ public class DrinkAvailabilityResult {
     public Integer getMaxSugarAvailable() {
         return maxSugarAvailable;
     }
+
+    public String toString() {
+        return "DrinkAvailabilityResult{" +
+                "isAvailable=" + isAvailable +
+                ", missingConsumable=" + missingConsumable +
+                ", maxSugarAvailable=" + maxSugarAvailable +
+                '}';
+    }
 }
