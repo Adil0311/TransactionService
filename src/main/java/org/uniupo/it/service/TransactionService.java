@@ -35,9 +35,9 @@ public class TransactionService {
             }
 
             String jsonMessage = new String(mqttMessage.getPayload());
-            this.selectedBeverage = gson.fromJson(jsonMessage, Selection.class).getDrinkCode();
-
-            
+            Selection selection = gson.fromJson(jsonMessage, Selection.class);
+            selectedBeverage = selection.getDrinkCode();
+            checkConsumableAvailability(selection);
 
         } catch (MqttException e) {
             throw new RuntimeException(e);
@@ -45,9 +45,10 @@ public class TransactionService {
     }
 
 
-        private void checkConsumableAvailability (String selectedBeverage) throws MqttException {
-            String dbTopic = "macchina/" + machineId + "/db";
-            mqttClient.publish(dbTopic + "/consumableAvailability", new MqttMessage(selectedBeverage.getBytes()));
-        }
-
+    private void checkConsumableAvailability(Selection selectedBeverage) throws MqttException {
+        String dispenserTopic = String.format(Topics.DISPENSER_TOPIC, machineId);
+        String jsonMessage = gson.toJson(selectedBeverage);
+        mqttClient.publish(dispenserTopic + "/consumableAvailability", new MqttMessage(jsonMessage.getBytes()));
     }
+
+}
