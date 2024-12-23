@@ -27,6 +27,8 @@ public class TransactionService {
         this.mqttClient.subscribe(baseTopic + "/consumableAvailabilityResponse",
                                   this::consumableAvailabilityResponseHandler);
         this.mqttClient.subscribe(baseTopic + "/checkMachineStatusResponse", this::checkMachineStatusResponseHandler);
+        this.mqttClient.subscribe(String.format(Topics.BALANCE_CHECK_TOPIC_RESPONSE, machineId),
+                                  this::balanceResponseHandler);
         this.state = State.IDLE;
         this.selectedBeverage = "beverageCode";
 
@@ -35,11 +37,30 @@ public class TransactionService {
         newSelectionHandler(baseTopic + "/newSelection", new MqttMessage(selectionJson.getBytes()));
     }
 
+    private void balanceResponseHandler(String topic, MqttMessage mqttMessage) {
+        String jsonMessage = new String(mqttMessage.getPayload());
+        boolean isBalanceOk = gson.fromJson(jsonMessage, Boolean.class);
+        if (isBalanceOk) {
+            System.out.println("Balance ok");
+        } else {
+            try {
+                System.out.println("Balance not ok");
+                mqttClient.publish(baseTopic + Topics.DISPLAY_TOPIC_UPDATE,
+                                   new MqttMessage(gson.toJson(new DisplayMessageFormat(true, "Insufficient balance")).getBytes()));
+            } catch (MqttException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
+
+    }
+
     private void checkMachineStatusResponseHandler(String topic, MqttMessage mqttMessage) {
         String jsonMessage = new String(mqttMessage.getPayload());
-        boolean isFaultTrue = gson.fromJson(jsonMessage, Boolean.class);
-        System.out.println(isFaultTrue);
-        if (isFaultTrue) {
+        System.out.println(jsonMessage);
+        System.out.println(topic);
+        boolean isFault = gson.fromJson(jsonMessage, Boolean.class);
+        if (isFault) {
             try {
                 mqttClient.publish(baseTopic + Topics.DISPLAY_TOPIC_UPDATE,
                                    new MqttMessage(gson.toJson(new DisplayMessageFormat(true, "Machine fault")).getBytes()));
@@ -61,9 +82,12 @@ public class TransactionService {
         String jsonMessage = new String(mqttMessage.getPayload());
         DrinkAvailabilityResult consumableAvailability = gson.fromJson(jsonMessage, DrinkAvailabilityResult.class);
         System.out.println(consumableAvailability.toString());
+
         if (consumableAvailability.isAvailable()) {
+            System.out.println("Drink available");
             try {
-                mqttClient.publish(baseTopic + Topics.BALANCE_CHECK_TOPIC, new MqttMessage(selectedBeverage.getBytes()));
+                mqttClient.publish(String.format(Topics.BALANCE_CHECK_TOPIC, machineId),
+                                   new MqttMessage(selectedBeverage.getBytes()));
             } catch (MqttException e) {
                 throw new RuntimeException(e);
             }
@@ -109,6 +133,7 @@ public class TransactionService {
 
 
     private void checkConsumableAvailability(Selection selectedBeverage) throws MqttException {
+        System.out.println("Checking consumable availability");
         String dispenserTopic = String.format(Topics.DISPENSER_TOPIC, machineId);
         String jsonMessage = gson.toJson(selectedBeverage);
         mqttClient.publish(dispenserTopic + "/consumableAvailability", new MqttMessage(jsonMessage.getBytes()));
