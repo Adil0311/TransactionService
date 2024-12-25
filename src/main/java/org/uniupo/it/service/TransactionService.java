@@ -6,10 +6,9 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.uniupo.it.dao.DrinkDao;
 import org.uniupo.it.dao.DrinkDaoImpl;
-import org.uniupo.it.model.DisplayMessageFormat;
-import org.uniupo.it.model.DrinkAvailabilityResult;
-import org.uniupo.it.model.Selection;
-import org.uniupo.it.model.State;
+import org.uniupo.it.dao.TransactionDao;
+import org.uniupo.it.dao.TransactionDaoImpl;
+import org.uniupo.it.model.*;
 import org.uniupo.it.util.Topics;
 
 public class TransactionService {
@@ -19,6 +18,7 @@ public class TransactionService {
     final private Gson gson;
     private State state;
     private String selectedBeverage;
+    private int sugarQuantity;
 
     public TransactionService(String machineId, MqttClient mqttClient) throws MqttException {
         this.machineId = machineId;
@@ -30,8 +30,9 @@ public class TransactionService {
         this.mqttClient.subscribe(baseTopic + "/checkMachineStatusResponse", this::checkMachineStatusResponseHandler);
         this.mqttClient.subscribe(String.format(Topics.BALANCE_CHECK_TOPIC_RESPONSE, machineId), this::balanceResponseHandler);
         this.state = State.IDLE;
-        this.selectedBeverage = "beverageCode";
-        Selection selection = new Selection("1", 2); // codice 1 = espresso, 2 cucchiaini di zucchero
+        this.selectedBeverage = "1";
+        this.sugarQuantity = 3;
+        Selection selection = new Selection(selectedBeverage, sugarQuantity);
         String selectionJson = gson.toJson(selection);
         newSelectionHandler(baseTopic + "/newSelection", new MqttMessage(selectionJson.getBytes()));
         subscribeToTopics();
@@ -53,7 +54,13 @@ public class TransactionService {
         mqttClient.subscribe(String.format(Topics.BALANCE_CHECK_TOPIC_RESPONSE, machineId), this::balanceResponseHandler);
         mqttClient.subscribe(String.format(Topics.ASSISTANCE_CHECK_MACHINE_STATUS_TOPIC, machineId), this::checkMachineStatusResponseHandler);
         mqttClient.subscribe(String.format(Topics.DISPENSER_TOPIC, machineId) + "/consumableAvailabilityResponse", this::consumableAvailabilityResponseHandler);
+        mqttClient.subscribe(String.format(Topics.DISPENSE_COMPLETED_TOPIC,machineId), this::dispenseCompletedHandler);
+    }
 
+    private void dispenseCompletedHandler(String s, MqttMessage message) {
+        TransactionDao transactionDao = new TransactionDaoImpl();
+        Transaction transaction = new Transaction(selectedBeverage, sugarQuantity);
+        transactionDao.registerTransaction(transaction);
     }
 
 
@@ -83,7 +90,9 @@ public class TransactionService {
 
         if (currentCredit >= drinkPrice) {
             try {
-                mqttClient.publish(String.format(Topics.DISPENSER_TOPIC_DISPENSE, machineId), new MqttMessage(selectedBeverage.getBytes()));
+                Selection selection = new Selection(selectedBeverage, sugarQuantity);
+                String jsonSelection = gson.toJson(selection);
+                mqttClient.publish(String.format(Topics.DISPENSER_TOPIC_DISPENSE, machineId), new MqttMessage(jsonSelection.getBytes()));
                 this.state = State.DISPENSING;
                 System.out.println("Dispensing");
             } catch (MqttException e) {

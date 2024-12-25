@@ -13,4 +13,12 @@ public final class  SQLQueries {
         public static final String GET_DRINK_PRICE =
                 "SELECT price FROM machine.\"Drink\" WHERE code = ?";
     }
+
+    public static  final class Transaction{
+        public static final String INSERT_TRANSACTION = """
+            INSERT INTO machine."Transaction"("timeStamp", "drinkCode", "sugarQuantity")
+            VALUES (?, ?, ?)
+            RETURNING "transactionId"
+            """;
+    }
 }
