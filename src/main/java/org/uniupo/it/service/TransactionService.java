@@ -30,7 +30,7 @@ public class TransactionService {
         this.mqttClient.subscribe(baseTopic + "/checkMachineStatusResponse", this::checkMachineStatusResponseHandler);
         this.mqttClient.subscribe(String.format(Topics.BALANCE_CHECK_TOPIC_RESPONSE, machineId), this::balanceResponseHandler);
         this.state = State.IDLE;
-        this.selectedBeverage = "1";
+        this.selectedBeverage = "2";
         this.sugarQuantity = 3;
         Selection selection = new Selection(selectedBeverage, sugarQuantity);
         String selectionJson = gson.toJson(selection);
