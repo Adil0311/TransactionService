@@ -63,7 +63,6 @@ public class TransactionService {
         transactionDao.registerTransaction(transaction);
     }
 
-
     private void balanceResponseHandler(String topic, MqttMessage mqttMessage) {
         String jsonMessage = new String(mqttMessage.getPayload());
         boolean isBalanceOk = gson.fromJson(jsonMessage, Boolean.class);
@@ -78,10 +77,7 @@ public class TransactionService {
                 throw new RuntimeException(e);
             }
         }
-
-
     }
-
 
     private void checkCreditAndDispense() {
         DrinkDao drinkDao = new DrinkDaoImpl();
@@ -90,6 +86,9 @@ public class TransactionService {
 
         if (currentCredit >= drinkPrice) {
             try {
+                TransactionRequest request = new TransactionRequest(currentCredit, drinkPrice);
+                mqttClient.publish(String.format(Topics.PROCESS_TRANSACTION_TOPIC, machineId), new MqttMessage(gson.toJson(request).getBytes()));
+
                 Selection selection = new Selection(selectedBeverage, sugarQuantity);
                 String jsonSelection = gson.toJson(selection);
                 mqttClient.publish(String.format(Topics.DISPENSER_TOPIC_DISPENSE, machineId), new MqttMessage(jsonSelection.getBytes()));
@@ -102,8 +101,6 @@ public class TransactionService {
             System.out.println("Credit not enough");
             handleError("Credit not enough");
         }
-
-
     }
 
     private void checkMachineStatusResponseHandler(String topic, MqttMessage mqttMessage) {

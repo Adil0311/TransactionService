@@ -8,4 +8,5 @@ public class Topics {
     public static final String BALANCE_CHECK_TOPIC = "macchina/%s/balance/checkBalance";
     public static final String BALANCE_CHECK_TOPIC_RESPONSE = "macchina/%s/transaction/checkBalanceResponse";
     public static final String DISPENSE_COMPLETED_TOPIC = "macchina/%s/dispenser/dispenseCompleted";
+    public static final String PROCESS_TRANSACTION_TOPIC = "macchina/%s/balance/processTransaction";
 }
