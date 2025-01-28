@@ -20,5 +20,8 @@ public final class  SQLQueries {
             VALUES (?, ?, ?)
             RETURNING "transactionId"
             """;
+        public static final String GET_CURRENT_CREDIT =
+                "SELECT \"totalCredit\" FROM machine.\"Machine\" LIMIT 1";
+
     }
 }

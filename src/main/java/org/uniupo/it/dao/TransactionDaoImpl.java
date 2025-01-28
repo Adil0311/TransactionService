@@ -25,4 +25,18 @@ public class TransactionDaoImpl implements TransactionDao {
         }
 
     }
+
+    @Override
+    public double getCurrentCredit() {
+        try (Connection conn = DatabaseConnection.getInstance().getConnection();
+             PreparedStatement stmt = conn.prepareStatement(SQLQueries.Transaction.GET_CURRENT_CREDIT)) {
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getDouble("totalCredit");
+            }
+            return 0.0;
+        } catch (SQLException e) {
+            throw new RuntimeException("Error retrieving current credit", e);
+        }
+    }
 }

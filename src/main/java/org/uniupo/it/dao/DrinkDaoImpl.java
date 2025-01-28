@@ -23,18 +23,5 @@ public class DrinkDaoImpl implements DrinkDao {
         return 0.0;
     }
 
-    @Override
-    public double getCurrentCredit() {
-        try (Connection conn = DatabaseConnection.getInstance().getConnection();
-             PreparedStatement stmt = conn.prepareStatement(SQLQueries.Balance.GET_CURRENT_CREDIT)) {
 
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return rs.getDouble("totalCredit");
-            }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
-        }
-        return 0.0;
-    }
 }
