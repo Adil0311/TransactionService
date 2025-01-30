@@ -11,23 +11,25 @@ import java.util.UUID;
 public class Main {
     public static void main(String[] args) {
 
-        String mqttUrl = "";
+        String mqttUrl = "ssl://localhost:8883";
         String machineId = "";
+        String instituteId = "";
 
-        Properties properties = new Properties();
-        try {
-            properties.load(Main.class.getClassLoader().getResourceAsStream("config.properties"));
-            mqttUrl = properties.getProperty("mqttUrl");
-            machineId = properties.getProperty("machineId");
-        } catch (Exception e) {
-            e.printStackTrace();
+        if (args.length != 2) {
+            System.out.println("Parametri non validi");
+            System.exit(1);
         }
+
+        instituteId = args[0];
+        machineId = args[1];
+
+
 
         try {
             MqttClient mqttClient = new MqttClient(mqttUrl, UUID.randomUUID() + " " + machineId);
             MqttConnectOptions mqttOptions = new MqttOptions().getOptions();
             mqttClient.connect(mqttOptions);
-            TransactionService transactionService = new TransactionService(machineId, mqttClient);
+            TransactionService transactionService = new TransactionService(instituteId,machineId, mqttClient);
         } catch (Exception e) {
             e.printStackTrace();
         }

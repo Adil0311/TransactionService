@@ -18,7 +18,7 @@ public final class  SQLQueries {
         public static final String INSERT_TRANSACTION = """
             INSERT INTO machine."Transaction"("timeStamp", "drinkCode", "sugarQuantity")
             VALUES (?, ?, ?)
-            RETURNING "transactionId"
+            RETURNING *
             """;
         public static final String GET_CURRENT_CREDIT =
                 "SELECT \"totalCredit\" FROM machine.\"Machine\" LIMIT 1";
