@@ -19,4 +19,6 @@ public class Topics {
 
     public static final String REGISTER_TRANSACTION_TOPIC= "management/transaction/register";
 
+    public static final String KILL_SERVICE_TOPIC = "macchinette/%s/%s/killService";
+
 }

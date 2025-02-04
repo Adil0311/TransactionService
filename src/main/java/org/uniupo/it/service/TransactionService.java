@@ -44,11 +44,28 @@ public class TransactionService {
         mqttClient.subscribe(String.format(Topics.TRANSACTION_NEW_SELECTION_TOPIC, instituteId, machineId), this::newSelectionHandler);
         mqttClient.subscribe(String.format(Topics.TRANSACTION_CONSUMABLE_AVAILABILITY_TOPIC_RESPONSE, instituteId, machineId), this::consumableAvailabilityResponseHandler);
         mqttClient.subscribe(String.format(Topics.RESPONSE_ASSISTANCE_CHECK_MACHINE_STATUS_TOPIC, instituteId, machineId), this::checkMachineStatusResponseHandler);
-        System.out.println("Subscribed to topic"+String.format(Topics.RESPONSE_ASSISTANCE_CHECK_MACHINE_STATUS_TOPIC, instituteId, machineId));
         mqttClient.subscribe(String.format(Topics.BALANCE_CHECK_TOPIC_RESPONSE, instituteId, machineId), this::balanceResponseHandler);
         mqttClient.subscribe(String.format(Topics.DISPENSE_COMPLETED_TOPIC, instituteId, machineId), this::dispenseCompletedHandler);
         mqttClient.subscribe(String.format((Topics.TRANSACTION_NEW_COIN_INSERTED_TOPIC), instituteId, machineId), this::newCoinInsertedHandler);
         mqttClient.subscribe(String.format(Topics.TRANSACTION_CANCEL_SELECTION_TOPIC, instituteId, machineId), this::cancelSelectionHandler);
+        mqttClient.subscribe(String.format(Topics.KILL_SERVICE_TOPIC, instituteId, machineId), this::killServiceHandler);
+    }
+
+    private void killServiceHandler(String topic, MqttMessage message) {
+        System.out.println("Service killed hello darkness my old friend :(");
+        new Thread(()->{
+            try {
+                Thread.sleep(1000);
+                if(mqttClient.isConnected()) {
+                    mqttClient.disconnect();
+                }
+                mqttClient.close();
+                System.exit(0);
+            } catch (Exception e) {
+                System.err.println("Error during shutdown: "+e.getMessage());
+                Runtime.getRuntime().halt(1);
+            }
+        }).start();
     }
 
     private void cancelSelectionHandler(String topic, MqttMessage message) {
@@ -78,7 +95,7 @@ public class TransactionService {
     private void dispenseCompletedHandler(String s, MqttMessage message) {
         System.out.println("Dispense completed handler called");
         TransactionMessage transactionMessage = getTransactionMessage();
-        System.out.println("Transaction message: " + transactionMessage.toString());
+        System.out.println("Transaction message: " + transactionMessage);
         this.state = State.IDLE;
         try {
             mqttClient.publish(Topics.REGISTER_TRANSACTION_TOPIC, new MqttMessage(gson.toJson(transactionMessage, TransactionMessage.class).getBytes()));
