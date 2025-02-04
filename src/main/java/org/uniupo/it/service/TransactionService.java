@@ -109,7 +109,7 @@ public class TransactionService {
     }
 
     private TransactionMessage getTransactionMessage() {
-        TransactionDao transactionDao = new TransactionDaoImpl();
+        TransactionDao transactionDao = new TransactionDaoImpl(instituteId,machineId);
         Transaction transaction = new Transaction(selection.getDrinkCode(), selection.getSugarLevel());
         Transaction createdTransaction = transactionDao.registerTransaction(transaction);
         return new TransactionMessage(machineId,
@@ -138,8 +138,8 @@ public class TransactionService {
     }
 
     private void checkCreditAndDispense() {
-        DrinkDao drinkDao = new DrinkDaoImpl();
-        TransactionDao transactionDao = new TransactionDaoImpl();
+        DrinkDao drinkDao = new DrinkDaoImpl(instituteId,machineId);
+        TransactionDao transactionDao = new TransactionDaoImpl(instituteId,machineId);
         double drinkPrice = drinkDao.getPriceByCode(this.selection.getDrinkCode());
         double currentCredit = transactionDao.getCurrentCredit();
 
