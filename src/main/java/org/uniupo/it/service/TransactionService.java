@@ -70,13 +70,12 @@ public class TransactionService {
 
     private void cancelSelectionHandler(String topic, MqttMessage message) {
         if (state == State.DISPENSING) {
-            handleError("Dispensing in progress");
+            handleError("Erogazione in corso...");
             return;
         }
         this.state = State.IDLE;
         try {
             mqttClient.publish(String.format(Topics.BALANCE_RETURN_MONEY_TOPIC, instituteId, machineId), new MqttMessage("Return Money".getBytes()));
-            mqttClient.publish(String.format(Topics.DISPLAY_TOPIC_UPDATE, instituteId, machineId), new MqttMessage(gson.toJson(new DisplayMessageFormat(false, "Acquisto eliminato")).getBytes()));
         } catch (MqttException e) {
             throw new RuntimeException(e);
         }
@@ -84,7 +83,7 @@ public class TransactionService {
 
     private void newCoinInsertedHandler(String topic, MqttMessage message) {
         if (state == State.DISPENSING) {
-            handleError("Dispensing in progress");
+            handleError("Erogazione in corso...");
             return;
         }
         if (state == State.IN_PAYMENT) {
@@ -100,7 +99,6 @@ public class TransactionService {
         try {
             mqttClient.publish(Topics.REGISTER_TRANSACTION_TOPIC, new MqttMessage(gson.toJson(transactionMessage, TransactionMessage.class).getBytes()));
             System.out.println("Transaction registered");
-            mqttClient.publish(String.format(Topics.DISPLAY_TOPIC_UPDATE, instituteId, machineId), new MqttMessage(gson.toJson(new DisplayMessageFormat(false, "Acquisto completato!")).getBytes()));
         } catch (MqttException e) {
             System.out.println("Error in dispense completed handler"+e.getMessage());
             throw new RuntimeException(e);
@@ -155,8 +153,7 @@ public class TransactionService {
                 throw new RuntimeException(e);
             }
         } else {
-            System.out.println("Credit not enough");
-            handleError("Credit not enough");
+            handleError("Credito insufficiente");
         }
     }
 
@@ -192,20 +189,24 @@ public class TransactionService {
     }
 
     private void consumableAvailabilityResponseHandler(String s, MqttMessage mqttMessage) {
-        System.out.println("Consumable availability response handler called");
         String jsonMessage = new String(mqttMessage.getPayload());
         DrinkAvailabilityResult consumableAvailability = gson.fromJson(jsonMessage, DrinkAvailabilityResult.class);
         System.out.println(consumableAvailability.toString());
 
-        if (consumableAvailability.isAvailable()) {
-            System.out.println("Drink available");
-            try {
+
+        if (consumableAvailability.isAvailable()) {try {
                 mqttClient.publish(String.format(Topics.BALANCE_CHECK_TOPIC, instituteId, machineId), new MqttMessage(this.selection.getDrinkCode().getBytes()));
             } catch (MqttException e) {
                 throw new RuntimeException(e);
             }
         } else {
-            handleError("Drink not available");
+          if (consumableAvailability.getMissingConsumable()==ConsumableType.SUGAR){
+              handleError("Massimo livello di zucchero disponibile "+consumableAvailability.getMaxSugarAvailable());
+          }
+          else {
+                handleError(consumableAvailability.getMissingConsumable().toString() + " non disponibile");
+          }
+
         }
     }
 
